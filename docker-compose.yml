@@ -1,0 +1,65 @@
+version: "2.2"
+services:
+  tensorflow-serving:
+    build: ./tensorflow-serving
+    container_name: "serve_base"
+    security_opt:
+      - apparmor:unconfined
+    stdin_open: true
+    tty: true
+    ports:
+      - "5000:5000"
+    networks:
+      demonet:
+        ipv4_address: "192.168.10.2"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5000/api"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+  camera-feed:
+    build: ./camera-feed
+    container_name: "camera-feed"
+    cap_add:
+      - SYS_ADMIN
+    devices:
+      - "/dev/video0:/dev/video0"
+    security_opt:
+      - apparmor:unconfined
+    stdin_open: true
+    tty: true
+    ports:
+      - "5000:5000"
+    networks:
+      demonet:
+        ipv4_address: "192.168.10.3"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:5000/api"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+  sensor-validation:
+    build: ./service-validation
+    container_name: "service-validation"
+    cap_add:
+      - SYS_ADMIN
+    stdin_open: true
+    tty: true
+    ports:
+      - "3000:3000"
+    links:
+      - tffs-node
+    networks:
+      demonet:
+        ipv4_address: "192.168.10.4"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+networks:
+  demonet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24
