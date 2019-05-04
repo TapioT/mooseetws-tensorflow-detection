@@ -1,8 +1,10 @@
 version: "2.2"
 services:
   tensorflow-serving:
-    #build: ./tensorflow-serving
-    image: emacski/tensorflow-serving:latest-arm32v7 
+    # if running on raspberry pi
+    #image: emacski/tensorflow-serving:latest-arm32v7
+    # if running on x86 pc or mac
+    image: tensorflow/serving:latest
     container_name: "serve_base"
     security_opt:
       - apparmor:unconfined
@@ -16,14 +18,17 @@ services:
     ports:
       - "8500:8500"
       - "8501:8501"
-    # networks:
-    #   demonet:
-    #     ipv4_address: "192.168.10.2"
-    # healthcheck:
-    #   test: ["CMD", "curl", "--fail", "http://localhost:5000/api"]
-    #   interval: 10s
-    #   timeout: 10s
-    #   retries: 3
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "curl",
+          "--fail",
+          "http://localhost:8501/v1/models/ssdlite_mobilenet_v2_coco_2018_05_09",
+        ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
   camera-feed:
     build: ./camera-feed
     container_name: "camera_feed"
@@ -37,36 +42,3 @@ services:
     tty: true
     ports:
       - "5000:5000"
-    # networks:
-    #   demonet:
-    #     ipv4_address: "192.168.10.3"
-    # healthcheck:
-    #   test: ["CMD", "curl", "--fail", "http://localhost:5000/api"]
-    #   interval: 10s
-    #   timeout: 10s
-    #   retries: 3
-  # sensor-validation:
-  #   build: ./service-validation
-  #   container_name: "service-validation"
-  #   cap_add:
-  #     - SYS_ADMIN
-  #   stdin_open: true
-  #   tty: true
-  #   ports:
-  #     - "3000:3000"
-  #   links:
-  #     - tffs-node
-  #   networks:
-  #     demonet:
-  #       ipv4_address: "192.168.10.4"
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:3000/api"]
-  #     interval: 10s
-  #     timeout: 10s
-  #     retries: 3
-# networks:
-#   demonet:
-#     driver: bridge
-#     ipam:
-#       config:
-#         - subnet: 192.168.10.0/24
