@@ -1,9 +1,9 @@
-FROM python:3
+FROM arm32v7/python:2.7
 
-COPY backend /home/demo/backend
+RUN apt update && apt install -y python-opencv
 
-COPY start.sh /home/demo/start.sh
+COPY start.py /home/demo/start.py
 
 EXPOSE 5000
 
-CMD ["sh", "/home/demo/start.sh"]
+CMD ["python", "/home/demo/start.py"]
