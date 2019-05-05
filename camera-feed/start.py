@@ -6,7 +6,8 @@ import time
 from cv2 import *
 
 TENSORFLOW_SERVING_URL = 'http://localhost:8501/v1/models/ssdlite_mobilenet_v2_coco_2018_05_09:predict'
-LIGHT_POLE_ID = 'unique_ID_for_this_light_pole'
+MOOSE_REPORT_URL = 'https://mooseetws.herokuapp.com/api/pi/v1/'
+LIGHT_POLE_ID = 1
 
 # hardcode potential threats id and label mapping, took from mscoco_complete_label_map.pbtxt
 obj_dict = {17: 'cat', 18: 'dog', 19: 'horse',
@@ -15,6 +16,12 @@ obj_dict = {17: 'cat', 18: 'dog', 19: 'horse',
 
 def report_db(name, score):
     print('#### report to db: ', name, score, LIGHT_POLE_ID)
+    payload = {'objectType': name,
+               'confidence': score, 'poleId': LIGHT_POLE_ID}
+    start = time.perf_counter()
+    res = requests.post(MOOSE_REPORT_URL, json=payload)
+    print(f'Took {time.perf_counter()-start:.2f}s')
+    pprint(res.json())
 
 
 def read_camera():
