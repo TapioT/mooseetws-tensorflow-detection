@@ -1,9 +1,12 @@
-import PIL.Image
+from PIL import Image
 import numpy
 import requests
 from pprint import pprint
 import time
-from cv2 import *
+import os
+import base64
+import json
+# from cv2 import *
 
 TENSORFLOW_SERVING_URL = 'http://localhost:8501/v1/models/ssdlite_mobilenet_v2_coco_2018_05_09:predict'
 MOOSE_REPORT_URL = 'https://mooseetws.herokuapp.com/api/pi/v1/'
@@ -19,20 +22,22 @@ def report_db(name, score):
     payload = {'objectType': name,
                'confidence': score, 'poleId': LIGHT_POLE_ID}
     start = time.perf_counter()
-    res = requests.post(MOOSE_REPORT_URL, json=payload)
+    # res = requests.post(MOOSE_REPORT_URL, json=payload)
     print(f'Took {time.perf_counter()-start:.2f}s')
     pprint(res.json())
 
 
 def read_camera():
-    # read image from usb camera with opencv
-    cam = VideoCapture(0)   # 0 -> index of camera
-    s, img = cam.read()
-    cam.release()
-    image_np = cvtColor(img, COLOR_BGR2RGB)
+    # read image from folder "images"
+    os.chdir("/images")
+    fl = os.listdir()
+    fl.sort()
+    image = Image.open(fl[0])
+    image = image.convert("RGB")
+    json_data = json.dumps(numpy.array(image).tolist())
 
     # construct post message to use tensorflow service
-    payload = {'instances': [image_np.tolist()]}
+    payload = {'instances': [json_data]}
     start = time.perf_counter()
     res = requests.post(TENSORFLOW_SERVING_URL, json=payload)
     print(f'Took {time.perf_counter()-start:.2f}s')

@@ -4,6 +4,7 @@
 FROM python:3
 
 RUN pip install opencv-python
+RUN pip install Pillow requests
 
 COPY start.py /home/demo/start.py
 

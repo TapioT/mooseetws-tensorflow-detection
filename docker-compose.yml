@@ -34,8 +34,8 @@ services:
     container_name: "camera_feed"
     cap_add:
       - SYS_ADMIN
-    devices:
-      - "/dev/video0:/dev/video0"
+    volumes:
+      - ./camera-feed/images:/images
     security_opt:
       - apparmor:unconfined
     stdin_open: true
