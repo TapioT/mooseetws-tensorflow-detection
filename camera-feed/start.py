@@ -1,12 +1,9 @@
-from PIL import Image
-import numpy
 import requests
 from pprint import pprint
 import time
 import os
-import base64
-import json
-# from cv2 import *
+import time
+import cv2
 
 TENSORFLOW_SERVING_URL = 'http://localhost:8501/v1/models/ssdlite_mobilenet_v2_coco_2018_05_09:predict'
 MOOSE_REPORT_URL = 'https://mooseetws.herokuapp.com/api/pi/v1/'
@@ -29,15 +26,19 @@ def report_db(name, score):
 
 def read_camera():
     # read image from folder "images"
-    os.chdir("/images")
-    fl = os.listdir()
+    while True:
+        fl = os.listdir("images/")
+        if len(fl) > 0:
+            break
+        time.sleep(1)
     fl.sort()
-    image = Image.open(fl[0])
-    image = image.convert("RGB")
-    json_data = json.dumps(numpy.array(image).tolist())
+    first_file = "images/" + fl[0] 
+    image = cv2.imread(first_file)
+    os.remove(first_file)
+    json_data = [image.tolist()]
 
     # construct post message to use tensorflow service
-    payload = {'instances': [json_data]}
+    payload = {'instances': json_data}
     start = time.perf_counter()
     res = requests.post(TENSORFLOW_SERVING_URL, json=payload)
     print(f'Took {time.perf_counter()-start:.2f}s')
@@ -59,7 +60,7 @@ def read_camera():
                 if obj_score > 0.5:
                     print('--warning !!! found animal, potentially it is a',
                           obj_dict[obj_class])
-                    report_db(obj_dict[obj_class], obj_score)
+                    # report_db(obj_dict[obj_class], obj_score)
             else:
                 print('----found safe object:', obj_class, obj_score)
 
